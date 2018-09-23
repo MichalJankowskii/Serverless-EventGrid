@@ -1,53 +1,57 @@
 namespace RegistrationApp
 {
     using System;
-    using System.Configuration;
     using System.Linq;
     using System.Net;
     using System.Net.Http;
+    using System.Threading.Tasks;
+    using Microsoft.AspNetCore.Http;
     using Microsoft.Azure.WebJobs;
     using Microsoft.Azure.WebJobs.Extensions.Http;
-    using Microsoft.Azure.WebJobs.Host;
+    using Microsoft.Extensions.Logging;
+    using Microsoft.WindowsAzure.Storage.Table;
     using Models;
 
     public static class RequestStatusCheck
     {
         [FunctionName("RequestStatusCheck")]
-        public static HttpResponseMessage Run(
-            [HttpTrigger(AuthorizationLevel.Function, "get")] HttpRequestMessage req,
-            [Table("processingStatus", Connection = "registrationstorage_STORAGE")]IQueryable<ProcessingStatus> processingStatusTable,
-            TraceWriter log)
+        public static async Task<HttpResponseMessage> Run(
+            [HttpTrigger(AuthorizationLevel.Function, "get")] HttpRequest req,
+            [Table("processingStatus", Connection = "registrationstorage_STORAGE")]CloudTable processingStatusTable,
+            ILogger log)
         {
-            string guid = req.GetQueryNameValuePairs()
-                .FirstOrDefault(q => String.Compare(q.Key, "guid", StringComparison.OrdinalIgnoreCase) == 0)
-                .Value;
+            string guid = req.Query["guid"];
 
-            log.Info($"Status check : {guid}");
+            log.LogInformation($"Status check : {guid}");
 
-            ProcessingStatus status =
-                processingStatusTable.Where(processingStatus => processingStatus.RowKey == guid).FirstOrDefault();
+            TableQuery<ProcessingStatus> searchQuery = new TableQuery<ProcessingStatus>()
+                .Where(TableQuery.GenerateFilterCondition("RowKey", QueryComparisons.Equal, guid));
+
+            ProcessingStatus status = (await processingStatusTable.ExecuteQuerySegmentedAsync(searchQuery, null)).FirstOrDefault();
 
             if (status == null)
             {
-                return req.CreateResponse(HttpStatusCode.BadRequest, "Please pass a correct guid on the query string");
+                return new HttpResponseMessage(HttpStatusCode.BadRequest)
+                    { Content = new StringContent("Please pass a correct guid on the query string") };
             }
 
             switch (status.ProcessingState)
             {
                 case "Accepted":
-                    return req.CreateResponse(HttpStatusCode.OK);
+                    return new HttpResponseMessage(HttpStatusCode.OK);
                 case "Received":
                     return new HttpResponseMessage(HttpStatusCode.Accepted)
                     {
                         Headers =
                         {
-                            Location = new Uri(ConfigurationManager.AppSettings["RequestStatusCheckUrl"] + guid)
+                            Location = new Uri(Environment.GetEnvironmentVariable("RequestStatusCheckUrl", EnvironmentVariableTarget.Process) + guid)
                         }
                     };
                 case "Error":
-                    return req.CreateErrorResponse(HttpStatusCode.BadRequest, status.Message);
+                    return new HttpResponseMessage(HttpStatusCode.BadRequest)
+                        { Content = new StringContent(status.Message) };
                 default:
-                    return req.CreateResponse(HttpStatusCode.BadRequest);
+                    return new HttpResponseMessage(HttpStatusCode.BadRequest);
             }
         }
     }

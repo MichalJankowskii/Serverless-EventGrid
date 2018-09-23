@@ -4,7 +4,7 @@ namespace RegistrationApp.Internal
     using System.Threading.Tasks;
     using FluentValidation.Results;
     using Microsoft.Azure.WebJobs;
-    using Microsoft.Azure.WebJobs.Host;
+    using Microsoft.Extensions.Logging;
     using Microsoft.WindowsAzure.Storage.Queue;
     using Microsoft.WindowsAzure.Storage.Table;
     using Models;
@@ -18,9 +18,9 @@ namespace RegistrationApp.Internal
             [QueueTrigger("requestreceived", Connection = "registrationstorage_STORAGE")]Customer customer,
             [Queue("requestaccepted", Connection = "registrationstorage_STORAGE")] CloudQueue requestAcceptedQueue,
             [Table("processingStatus", Connection = "registrationstorage_STORAGE")] CloudTable processingStatusTable,
-            TraceWriter log)
+            ILogger log)
         {
-            log.Info($"RequestValidation function processed: {customer.RowKey} ({customer.Name} - {customer.Surname})");
+            log.LogInformation($"RequestValidation function processed: {customer.RowKey} ({customer.Name} - {customer.Surname})");
 
             var validator = new CustomerValidator();
             ValidationResult results = validator.Validate(customer);

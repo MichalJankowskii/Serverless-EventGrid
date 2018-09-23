@@ -1,13 +1,12 @@
 namespace RegistrationApp
 {
     using System;
-    using System.Configuration;
     using System.Net;
     using System.Net.Http;
     using System.Threading.Tasks;
     using Microsoft.Azure.WebJobs;
     using Microsoft.Azure.WebJobs.Extensions.Http;
-    using Microsoft.Azure.WebJobs.Host;
+    using Microsoft.Extensions.Logging;
     using Microsoft.WindowsAzure.Storage.Queue;
     using Microsoft.WindowsAzure.Storage.Table;
     using Models;
@@ -17,12 +16,15 @@ namespace RegistrationApp
     {
         [FunctionName("SignCustomer")]
         public static async Task<HttpResponseMessage> Run(
-            [HttpTrigger(AuthorizationLevel.Function, "post")] Customer customer,
-            [Table("processingStatus", Connection = "registrationstorage_STORAGE")] CloudTable processingStatusTable,
-            [Queue("requestreceived", Connection = "registrationstorage_STORAGE")] CloudQueue requestReceivedQueue,
-            TraceWriter log)
+            [HttpTrigger(AuthorizationLevel.Function, "post")]
+            Customer customer,
+            [Table("processingStatus", Connection = "registrationstorage_STORAGE")]
+            CloudTable processingStatusTable,
+            [Queue("requestreceived", Connection = "registrationstorage_STORAGE")]
+            CloudQueue requestReceivedQueue,
+            ILogger log)
         {
-            log.Info($"Data received: {customer.Name} - {customer.Surname}");
+            log.LogInformation($"Data received: {customer.Name} - {customer.Surname}");
 
             var processingStatus = new ProcessingStatus
             {
@@ -41,7 +43,9 @@ namespace RegistrationApp
             {
                 Headers =
                 {
-                    Location = new Uri(ConfigurationManager.AppSettings["RequestStatusCheckUrl"] + processingStatus.RowKey)
+                    Location = new Uri(
+                        Environment.GetEnvironmentVariable("RequestStatusCheckUrl", EnvironmentVariableTarget.Process) +
+                        processingStatus.RowKey)
                 }
             };
         }

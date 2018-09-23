@@ -3,7 +3,7 @@ namespace RegistrationApp.Internal
     using System;
     using System.Threading.Tasks;
     using Microsoft.Azure.WebJobs;
-    using Microsoft.Azure.WebJobs.Host;
+    using Microsoft.Extensions.Logging;
     using Microsoft.WindowsAzure.Storage.Table;
     using Models;
 
@@ -13,9 +13,9 @@ namespace RegistrationApp.Internal
         public static async Task Run(
             [QueueTrigger("tostorecustomer", Connection = "registrationstorage_STORAGE")] Customer customer,
             [Table("customers", Connection = "registrationstorage_STORAGE")] CloudTable customersTable,
-            TraceWriter log)
+            ILogger log)
         {
-            log.Info($"SaveCustomer function processed: {customer.Name} {customer.Surname}");
+            log.LogInformation($"SaveCustomer function processed: {customer.Name} {customer.Surname}");
             customer.PartitionKey = "AzureTest";
             customer.RowKey = Guid.NewGuid().ToString();
 

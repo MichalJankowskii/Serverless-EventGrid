@@ -7,6 +7,7 @@
     "RequestStatusCheckUrl": "http://localhost:7071/api/RequestStatusCheck?guid=",
     "AzureWebJobsSendGridApiKey": "ENTER_SENDGRID_APIKEY",
     "AzureWebJobsTwilioAccountSid": "ENTER_TWILIO_ACCOUNTSID",
-    "AzureWebJobsTwilioAuthToken": "ENTER_TWILIO_AUTHTOKEN"
+    "AzureWebJobsTwilioAuthToken": "ENTER_TWILIO_AUTHTOKEN",
+    "FUNCTIONS_WORKER_RUNTIME": "dotnet"
   }
 }

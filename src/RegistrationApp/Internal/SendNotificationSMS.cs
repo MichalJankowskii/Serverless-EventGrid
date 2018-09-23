@@ -1,9 +1,10 @@
 namespace RegistrationApp.Internal
 {
     using Microsoft.Azure.WebJobs;
-    using Microsoft.Azure.WebJobs.Host;
+    using Microsoft.Extensions.Logging;
     using Models;
-    using Twilio;
+    using Twilio.Rest.Api.V2010.Account;
+    using Twilio.Types;
 
     public static class SendNotificationSMS
     {
@@ -11,14 +12,13 @@ namespace RegistrationApp.Internal
         public static void Run(
             [QueueTrigger("tosendnotification", Connection = "registrationstorage_STORAGE")] Customer customer,
             [TwilioSms(
-                To = "ENTER_YOUR_PHONE_NUMBER",
                 From = "ENTER_FROM_PHONE_NUMBER - PROVIDED BY TWILIO",
                 Body = "New customer {Name} {Surname}!")]
-            out SMSMessage message,
-            TraceWriter log)
+            out CreateMessageOptions messageOptions,
+            ILogger log)
         {
-            log.Info($"SendNotificationSMS function processed: {customer.Name} {customer.Surname}");
-            message = new SMSMessage();
+            log.LogInformation($"SendNotificationSMS function processed: {customer.Name} {customer.Surname}");
+            messageOptions = new CreateMessageOptions(new PhoneNumber("ENTER_YOUR_PHONE_NUMBER"));
         }
     }
 }

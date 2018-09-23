@@ -1,7 +1,7 @@
 namespace RegistrationApp.Internal
 {
     using Microsoft.Azure.WebJobs;
-    using Microsoft.Azure.WebJobs.Host;
+    using Microsoft.Extensions.Logging;
     using Models;
     using SendGrid.Helpers.Mail;
 
@@ -16,11 +16,11 @@ namespace RegistrationApp.Internal
                 Text = "Hi {Name}, Thank you for registering!!!!",
                 From = "ENTER_FROM_EMAIL_ADDRESS"
             )]
-            out Mail message,
-            TraceWriter log)
+            out SendGridMessage message,
+            ILogger log)
         {
-            log.Info($"SendThankYouEmailMessage function processed: {customer.Name} {customer.Surname}");
-            message = new Mail();
+            log.LogInformation($"SendThankYouEmailMessage function processed: {customer.Name} {customer.Surname}");
+            message = new SendGridMessage();
         }
     }
 }
