@@ -3,7 +3,7 @@ Refactor existing solution to use only [Event Grid](https://azure.microsoft.com/
 
 # Solution deployment
 ## Clone / download git repository
-`git clone https://github.com/MichalJankowskii/Severless-EventGrid.git`
+`git clone https://github.com/MichalJankowskii/Serverless-EventGrid.git`
 ## Provisioning
 1. Go to folder `src\Provisioning`
 2. Edit `azuredeploy.parameters.json` and update all parameters. Remember that *appName* must be unique for whole Azure cloud
